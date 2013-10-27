@@ -1,0 +1,158 @@
+<html>
+  <head>
+    <Title>Search Visualization</title>
+    <!-- the following line is D3 package which does all the plotting on this page. It's free and awesome, and can be downloaded at d3js.org -->
+    <script src="http://d3js.org/d3.v2.min.js"></script>
+    <style type="text/css">
+
+line {
+//  fill:
+  opacity: 0.8;
+  stroke: #808000;
+ // stroke-width: 1.5px;
+}
+
+circle {
+  opacity: 0.8;
+  fill: #fdd700;
+  stroke: #333;
+  stroke-width: 1.5px;
+}
+
+text {
+  font: 10px sans-serif;
+  pointer-events: none;
+}
+
+lines_labels
+ {
+  font: 16px sans-serif;
+  pointer-events: none;
+}
+
+text.shadow {
+  stroke: #fff;
+  stroke-width: 3px;
+  stroke-opacity: .8;
+}
+
+    </style>
+
+  </head>
+  
+
+  <body style="background: rgb(255, 255, 255)  repeat scroll top left; margin: 0pt; ">
+
+    <center>
+      <div style="width:660px;height:2300px;border:0px solid rgb(221,217,205); margin-top: 10px; padding: 20px;" class="rounded box" id="viz">
+
+
+
+<a href="{% url Wikoid.views.indexView %}"> <p> Make another Search </p> </a>
+
+    <script type="text/javascript">
+var links = {{ items|safe }};
+
+var nodes = {};
+
+// Compute the distinct nodes from the links.
+links.forEach(function(link) {
+  link.source = nodes[link.source] || (nodes[link.source] = {name: link.source});
+  link.target = nodes[link.target] || (nodes[link.target] = {name: link.target});
+});
+
+var  w = 960,
+    h= 500,
+    l = 80,
+    r = 12,
+    ch = -150;
+
+var force = d3.layout.force()
+    .nodes(d3.values(nodes))
+    .links(links)
+    .size([w, h])
+    .linkDistance(l)
+    .charge(ch)
+    .on("tick", tick)
+    .start();
+
+var svg = d3.select("#viz").append("svg:svg")
+    .attr("width", w)
+    .attr("height", h);
+
+var path = svg.append("svg:g").selectAll("link")
+    .data(force.links())
+  .enter().append("svg:line");
+//       .attr("stroke", "#222");
+//    .attr("class", function(d) { return "link " + d.type; });
+
+
+
+var text = svg.selectAll("node")
+    .data(force.nodes())
+  .enter().append("svg:a");
+
+var WIKIPEDIA_BASE='https://en.wikipedia.org/wiki/';
+
+
+text.attr("xlink:href", function(d) { return (WIKIPEDIA_BASE + d.name ); })
+//text.attr("xlink:target", "_blank")
+;
+//text.attr("xlink:href", function(d) { return ("papers/" + d.name + ".pdf"); });
+
+text.append("svg:circle")
+    .attr("r", r)
+    .attr("alpha", .5)
+    .call(force.drag);
+
+var lines_labels = svg.selectAll("link") //this is moved in this position so that circles don't overlap it
+    .data(force.links())
+       .enter().append("text")
+       .attr("class","lines_labels") //dnw
+       .text(function(d) { return  d.labelme; });
+
+
+
+// A copy of the text with a thick white stroke for legibility.
+text.append("svg:text")
+    .attr("x", 0)
+    .attr("y", 0)
+    .attr("class", "shadow")
+    .text(function(d) { return d.name; });
+
+text.append("svg:text")
+    .attr("x", 0)
+    .attr("y", 0)
+    .text(function(d) { return d.name; });
+
+// Use elliptical arc path segments to doubly-encode directionality.
+function tick() {
+     path.attr("x1", function(d) { return d.source.x; })
+         .attr("y1", function(d) { return d.source.y; })
+         .attr("x2", function(d) { return d.target.x; })
+         .attr("y2", function(d) { return d.target.y; });
+
+
+     lines_labels.attr("x", function(d) { return (d.source.x+d.target.x)/2; })
+         .attr("y", function(d) { return (d.source.y+d.target.y)/2; })
+
+//  circle.attr("transform", function(d) {    return "translate(" + d.x + "," + d.y + ")";  });
+
+  text.attr("transform", function(d) {
+    return "translate(" + d.x + "," + d.y + ")";
+  });
+};
+
+
+    </script>
+
+
+  </center>
+	
+</body>
+</html>
+
+
+
+
+
